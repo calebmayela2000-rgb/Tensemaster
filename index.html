@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TenseMaster — Académie de la Conjugaison Anglaise</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand">
+        <span class="brand-badge">EN ⇄ FR</span>
+        <h1>TenseMaster</h1>
+      </div>
+
+      <nav class="main-nav">
+        <button class="nav-btn active" data-view="home">Tableau de bord</button>
+        <button class="nav-btn" data-view="arena">Arène de jeu</button>
+        <button class="nav-btn" data-view="encyclopedia">Encyclopédie (16 temps)</button>
+        <button class="nav-btn" data-view="irregulars">Verbes irréguliers</button>
+      </nav>
+
+      <div class="player-stats">
+        <div class="stat-pill" title="Niveau actuel">
+          <span>Niv.</span>
+          <strong id="stat-level">1</strong>
+        </div>
+        <div class="stat-pill" title="Points d'expérience">
+          <strong id="stat-xp">0</strong>
+          <span>XP</span>
+        </div>
+        <div class="stat-pill streak" title="Série de bonnes réponses">
+          <span>🔥</span>
+          <strong id="stat-streak">0</strong>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- VUE 1 : TABLEAU DE BORD -->
+    <section id="view-home" class="view active">
+      <div class="hero-card">
+        <div>
+          <h2>Maîtrisez l'intégralité de la conjugaison anglaise</h2>
+          <p>Du <strong>Present Simple</strong> au <strong>Third Conditional</strong>, en passant par les verbes irréguliers, les modaux et la voix passive.</p>
+          <div class="hero-actions">
+            <button class="btn btn-primary" onclick="startQuickGame('qcm')">Lancer un entraînement</button>
+            <button class="btn btn-secondary" onclick="switchView('encyclopedia')">Réviser les fiches</button>
+          </div>
+        </div>
+        <div class="global-progress-box">
+          <div class="progress-ring-label">
+            <span id="mastery-percent">0%</span>
+            <small>Maîtrise globale</small>
+          </div>
+          <button class="btn-link" onclick="resetProgress()">Réinitialiser la progression</button>
+        </div>
+      </div>
+
+      <h3 class="section-title">Progression par temps et structure grammaticale</h3>
+      <div id="mastery-grid" class="mastery-grid"></div>
+    </section>
+
+    <!-- VUE 2 : ARÈNE DE JEU -->
+    <section id="view-arena" class="view">
+      <div id="arena-setup" class="card">
+        <h2>Configurer votre session</h2>
+
+        <div class="setup-group">
+          <label>1. Choisissez un mode de jeu :</label>
+          <div class="mode-cards">
+            <button class="mode-card active" data-mode="qcm">
+              <strong>🎯 Le Maître des Temps</strong>
+              <span>QCM contextuel avec indices temporels et explications détaillées.</span>
+            </button>
+            <button class="mode-card" data-mode="forge">
+              <strong>✍️ La Forge de Phrases</strong>
+              <span>Saisissez la conjugaison exacte (formes contractées acceptées).</span>
+            </button>
+            <button class="mode-card" data-mode="irregular">
+              <strong>⚡ Duel d'Irréguliers</strong>
+              <span>Retrouvez le Prétérit et le Participe Passé des verbes irréguliers.</span>
+            </button>
+            <button class="mode-card" data-mode="blitz">
+              <strong>⏱️ Contre-la-Montre (60s)</strong>
+              <span>Enchaînez un maximum de bonnes réponses avant la fin du chrono.</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="setup-row">
+          <div class="setup-group">
+            <label for="filter-category">2. Catégorie grammaticale :</label>
+            <select id="filter-category">
+              <option value="all">Tous les temps et structures</option>
+              <option value="present">Temps du Présent (4)</option>
+              <option value="past">Temps du Passé & Used to (5)</option>
+              <option value="future">Temps du Futur (4)</option>
+              <option value="advanced">Conditionnels, Modaux & Passif (3)</option>
+            </select>
+          </div>
+
+          <div class="setup-group">
+            <label for="filter-level">3. Niveau CECRL :</label>
+            <select id="filter-level">
+              <option value="all">Tous les niveaux (A1 → C1)</option>
+              <option value="A1-A2">Débutant / Élémentaire (A1–A2)</option>
+              <option value="B1-B2">Intermédiaire (B1–B2)</option>
+              <option value="C1">Avancé (C1)</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-large" onclick="startGame()">Commencer la partie</button>
+      </div>
+
+      <!-- ZONE DE JEU ACTIVE -->
+      <div id="arena-play" class="card hidden">
+        <div class="game-top-bar">
+          <button class="btn btn-ghost" onclick="quitGame()">← Quitter</button>
+          <div class="game-badges">
+            <span id="game-mode-badge" class="badge">Mode</span>
+            <span id="game-level-badge" class="badge badge-outline">Niveau</span>
+            <span id="game-timer-badge" class="badge badge-timer hidden">60s</span>
+          </div>
+          <div class="game-score-live">Score : <strong id="session-score">0</strong></div>
+        </div>
+
+        <div class="progress-bar-wrap">
+          <div id="session-progress-bar" class="progress-bar-fill"></div>
+        </div>
+
+        <div id="question-box" class="question-box">
+          <p id="question-hint" class="question-hint"></p>
+          <div class="sentence-row">
+            <h3 id="question-prompt" class="question-prompt"></h3>
+            <button id="speak-prompt-btn" class="icon-btn" title="Écouter la phrase">🔊</button>
+          </div>
+          <p id="question-fr" class="question-fr"></p>
+        </div>
+
+        <!-- Zone QCM -->
+        <div id="qcm-options" class="options-grid"></div>
+
+        <!-- Zone Saisie Libre (Forge / Irréguliers) -->
+        <form id="input-form" class="input-form hidden" onsubmit="submitTextAnswer(event)">
+          <div id="forge-inputs" class="forge-inputs"></div>
+          <button type="submit" class="btn btn-primary">Valider la réponse</button>
+        </form>
+
+        <!-- Feedback immédiat -->
+        <div id="feedback-box" class="feedback-box hidden">
+          <div class="feedback-header">
+            <strong id="feedback-title"></strong>
+            <span id="feedback-tense-tag" class="badge"></span>
+          </div>
+          <p id="feedback-explanation"></p>
+          <button id="next-question-btn" class="btn btn-primary" onclick="nextQuestion()">Question suivante →</button>
+        </div>
+      </div>
+
+      <!-- ÉCRAN DE FIN DE PARTIE -->
+      <div id="arena-summary" class="card summary-card hidden">
+        <h2>Session terminée !</h2>
+        <div class="summary-stats">
+          <div><strong id="sum-correct">0</strong><span>Bonnes réponses</span></div>
+          <div><strong id="sum-xp">+0</strong><span>XP gagnés</span></div>
+          <div><strong id="sum-accuracy">0%</strong><span>Précision</span></div>
+        </div>
+        <div class="hero-actions">
+          <button class="btn btn-primary" onclick="startGame()">Rejouer</button>
+          <button class="btn btn-secondary" onclick="quitGame()">Changer de mode</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- VUE 3 : ENCYCLOPÉDIE DES 16 TEMPS -->
+    <section id="view-encyclopedia" class="view">
+      <div class="section-header">
+        <h2>Encyclopédie complète de la conjugaison anglaise</h2>
+        <div class="filter-pills" id="encyclo-filters">
+          <button class="pill active" data-cat="all">Tout (16)</button>
+          <button class="pill" data-cat="present">Présent (4)</button>
+          <button class="pill" data-cat="past">Passé (5)</button>
+          <button class="pill" data-cat="future">Futur (4)</button>
+          <button class="pill" data-cat="advanced">Avancé (3)</button>
+        </div>
+      </div>
+      <div id="encyclopedia-list" class="encyclopedia-list"></div>
+    </section>
+
+    <!-- VUE 4 : VERBES IRRÉGULIERS -->
+    <section id="view-irregulars" class="view">
+      <div class="section-header">
+        <h2>Dictionnaire des verbes irréguliers essentiels</h2>
+        <input type="search" id="irregular-search" class="search-input" placeholder="Rechercher un verbe (ex: go, aller, went)...">
+      </div>
+      <div class="table-wrap card">
+        <table class="irregular-table">
+          <thead>
+            <tr>
+              <th>Base verbale</th>
+              <th>Prétérit (Past Simple)</th>
+              <th>Participe passé</th>
+              <th>Traduction</th>
+              <th>Audio</th>
+            </tr>
+          </thead>
+          <tbody id="irregulars-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
